@@ -2,7 +2,43 @@ import org.gradle.internal.jvm.Jvm
 
 plugins {
     id 'java'
+
+    // ========== begin moda-custom block1 ==========
+    // I hope that the corretto squad will publish this themselves, but for now to publish:
+    // ensure this fork (https://github.com/ModaOperandi/hotpatch-for-apache-log4j2) is in sync with upstream
+    // > git pull --tags
+    // > ./gradlew artifactoryPublish (assuming JFROG_USER and JFROG_PASS in your env)
+    id 'maven-publish'
+    id "com.jfrog.artifactory" version "4.25.2"
+    // ========== moda-custom block1 ==========
 }
+
+// ========== begin moda-custom block2 ==========
+artifactory {
+    publish {
+        contextUrl = 'https://moda.jfrog.io/moda'
+        repository {
+            repoKey = 'sbt'
+            username = "$System.env.JFROG_USER"
+            password = "$System.env.JFROG_PASS"
+            maven = true
+        }
+        defaults {
+            publications('mavenJava')
+        }
+        publishBuildInfo = false
+        publishArtifacts = true
+        publishPom = true
+    }
+}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+// ========== moda-custom block2 ==========
 
 group 'com.amazon.corretto.hotpatch'
 version = file('version.txt').text.trim()
